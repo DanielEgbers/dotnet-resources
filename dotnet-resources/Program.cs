@@ -8,8 +8,6 @@ namespace Dotnet.Resources
 {
     public static class Program
     {
-        private const string ResourceHacker = "ResourceHacker.exe";
-
 #pragma warning disable IDE1006 // Naming Styles
         public static async Task<int> Main(string[] args)
 #pragma warning restore IDE1006 // Naming Styles
@@ -59,14 +57,14 @@ namespace Dotnet.Resources
             try
             {
                 var rcFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".rc");
-                await RunAsync(ResourceHacker, $@"-open ""{sourceFile}"" -save ""{rcFile}"" -action extract -mask VersionInfo");
+                await ExecAsync($@"-open ""{sourceFile}"" -save ""{rcFile}"" -action extract -mask VersionInfo");
                 try
                 {
                     var resFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".res");
-                    await RunAsync(ResourceHacker, $@"-open ""{rcFile}"" -save ""{resFile}"" -action compile");
+                    await ExecAsync($@"-open ""{rcFile}"" -save ""{resFile}"" -action compile");
                     try
                     {
-                        await RunAsync(ResourceHacker, $@"-open ""{targetFile}"" -save ""{targetFile}"" -res ""{resFile}"" -action addoverwrite -mask VersionInfo");
+                        await ExecAsync($@"-open ""{targetFile}"" -save ""{targetFile}"" -res ""{resFile}"" -action addoverwrite -mask VersionInfo");
                     }
                     finally
                     {
@@ -87,18 +85,9 @@ namespace Dotnet.Resources
             }
         }
 
-        private static async Task RunAsync(string name, string args)
+        private static async Task ExecAsync(string command)
         {
-            var consoleOut = Console.Out;
-            try
-            {
-                Console.SetOut(TextWriter.Null);
-                await SimpleExec.Command.ReadAsync(name, args, noEcho: true);
-            }
-            finally
-            {
-                Console.SetOut(consoleOut);
-            }
+            await SimpleExec.Command.ReadAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ResourceHacker.exe"), command, noEcho: true);
         }
     }
 }
