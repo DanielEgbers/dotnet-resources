@@ -45,10 +45,16 @@ namespace Dotnet.Resources
         private static async Task<int> ExecVersionInfoCopyAsync(string sourceFile, string targetFile)
         {
             if (!File.Exists(sourceFile))
+            {
+                Console.WriteLine("ERROR: source file not found");
                 return 2;
+            }
 
             if (!File.Exists(targetFile))
+            {
+                Console.WriteLine("ERROR: target file not found");
                 return 3;
+            }
 
             try
             {
@@ -76,7 +82,7 @@ namespace Dotnet.Resources
             }
             catch (SimpleExec.NonZeroExitCodeException)
             {
-                Console.WriteLine("unknown error");
+                Console.WriteLine("ERROR: unknown");
                 return 1;
             }
         }
