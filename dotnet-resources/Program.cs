@@ -16,8 +16,8 @@ namespace Dotnet.Resources
         {
             var versionInfoCopy = new Command("copy")
             {
-                new Option<FileInfo>(new [] { "--source-file", "-s" }) { IsRequired = true },
-                new Option<FileInfo>(new [] { "--target-file", "-t" }) { IsRequired = true },
+                new Argument<FileInfo>("source-file"),
+                new Argument<FileInfo>("target-file"),
             };
             versionInfoCopy.Handler = CommandHandler.Create
             (
