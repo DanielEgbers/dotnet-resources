@@ -1,8 +1,8 @@
 ﻿using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Threading.Tasks;
+using CliWrap.Exceptions;
 
 namespace Dotnet.Resources
 {
@@ -12,59 +12,93 @@ namespace Dotnet.Resources
         public static async Task<int> Main(string[] args)
 #pragma warning restore IDE1006 // Naming Styles
         {
-            var versionInfoCopy = new Command("copy")
+            var versionInfoCopySourceFileArgument = new Argument<FileInfo>("source-file");
+            var versionInfoCopyTargetFileArgument = new Argument<FileInfo>("target-file");
+            var versionInfoCopyCommand = new Command("copy")
             {
-                new Argument<FileInfo>("source-file"),
-                new Argument<FileInfo>("target-file"),
+                versionInfoCopySourceFileArgument,
+                versionInfoCopyTargetFileArgument,
             };
-            versionInfoCopy.Handler = CommandHandler.Create
+            versionInfoCopyCommand.SetHandler
             (
-                async (FileInfo sourceFile, FileInfo targetFile) =>
+                (FileInfo sourceFile, FileInfo targetFile) =>
                 {
-                    return await ExecVersionInfoCopyAsync(sourceFile.FullName, targetFile.FullName);
-                }
+                    return ExecVersionInfoCopyAsync(sourceFile.FullName, targetFile.FullName);
+                },
+                versionInfoCopySourceFileArgument,
+                versionInfoCopyTargetFileArgument
+
             );
 
-            var versionInfo = new Command("versioninfo")
+            var versionInfoCommand = new Command("versioninfo")
             {
-                versionInfoCopy
+                versionInfoCopyCommand
             };
 
-            var root = new RootCommand()
+            var rootCommand = new RootCommand()
             {
-                versionInfo
+                versionInfoCommand
             };
 
-            var exitCode = await root.InvokeAsync(args);
-
-            return exitCode;
+            return await rootCommand.InvokeAsync(args);
         }
 
         private static async Task<int> ExecVersionInfoCopyAsync(string sourceFile, string targetFile)
         {
             if (!File.Exists(sourceFile))
             {
-                Console.WriteLine("ERROR: source file not found");
+                Console.Error.WriteLine("ERROR: source file not found");
                 return 2;
             }
 
             if (!File.Exists(targetFile))
             {
-                Console.WriteLine("ERROR: target file not found");
+                Console.Error.WriteLine("ERROR: target file not found");
                 return 3;
             }
 
             try
             {
+                var resourceHacker = CliWrap.Cli.Wrap(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ResourceHacker.exe"));
+
                 var rcFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".rc");
-                await ExecAsync($@"-open ""{sourceFile}"" -save ""{rcFile}"" -action extract -mask VersionInfo");
+
+                await resourceHacker
+                    .WithArguments(args => args
+                        .Add("-open").Add(sourceFile)
+                        .Add("-save").Add(rcFile)
+                        .Add("-action").Add("extract")
+                        .Add("-mask").Add("VersionInfo")
+                    ).ExecuteAsync();
                 try
                 {
                     var resFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".res");
-                    await ExecAsync($@"-open ""{rcFile}"" -save ""{resFile}"" -action compile");
+
+                    await resourceHacker
+                        .WithArguments(args => args
+                            .Add("-open").Add(rcFile)
+                            .Add("-save").Add(resFile)
+                            .Add("-action").Add("compile")
+                        ).ExecuteAsync();
                     try
                     {
-                        await ExecAsync($@"-open ""{targetFile}"" -save ""{targetFile}"" -res ""{resFile}"" -action addoverwrite -mask VersionInfo");
+                        await resourceHacker
+                            .WithArguments(args => args
+                                .Add("-open").Add(targetFile)
+                                .Add("-save").Add(targetFile)
+                                .Add("-res").Add(resFile)
+                                .Add("-action").Add("delete")
+                                .Add("-mask").Add("VersionInfo")
+                            ).ExecuteAsync();
+
+                        await resourceHacker
+                            .WithArguments(args => args
+                                .Add("-open").Add(targetFile)
+                                .Add("-save").Add(targetFile)
+                                .Add("-res").Add(resFile)
+                                .Add("-action").Add("addoverwrite")
+                                .Add("-mask").Add("VersionInfo")
+                            ).ExecuteAsync();
                     }
                     finally
                     {
@@ -78,16 +112,11 @@ namespace Dotnet.Resources
 
                 return 0;
             }
-            catch (SimpleExec.NonZeroExitCodeException)
+            catch (CommandExecutionException)
             {
-                Console.WriteLine("ERROR: unknown");
+                Console.Error.WriteLine("ERROR: unknown");
                 return 1;
             }
-        }
-
-        private static async Task ExecAsync(string command)
-        {
-            await SimpleExec.Command.ReadAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ResourceHacker.exe"), command, noEcho: true);
         }
     }
 }
