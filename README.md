@@ -2,7 +2,7 @@
 [.NET Core Global Tools](https://aka.ms/global-tools) to edit resources of exe
 
 #### Prerequisites
-- [.NET Core 2.1 Runtime/SDK or later versions](https://dotnet.microsoft.com/download)
+- [.NET 6 or .NET 7](https://dotnet.microsoft.com/download)
 
 ## Deployment
 
