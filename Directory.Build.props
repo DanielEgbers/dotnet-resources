@@ -1,0 +1,43 @@
+<Project>
+
+    <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
+
+    <PropertyGroup>
+        <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <UseArtifactsOutput>true</UseArtifactsOutput>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+        <NeutralLanguage>en</NeutralLanguage>
+
+        <Authors>Daniel Egbers</Authors>
+        <Copyright>$(Authors)</Copyright>
+        <PackageProjectUrl>https://github.com/DanielEgbers/dotnet-resources</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/DanielEgbers/dotnet-resources</RepositoryUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <GitHeadRef Condition="'$(GitHeadRef)' == ''">$(GITHUB_HEAD_REF)</GitHeadRef>
+        <GitHeadRef Condition="'$(GitHeadRef)' == ''">$(GITHUB_REF_NAME)</GitHeadRef>
+        <GitHeadRef Condition="'$(GitHeadRef)' == ''">$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(MsBuildThisFileDirectory)/.git/HEAD').Trim()),'.*\brefs/\w+/([^ ]+).*','$1'))</GitHeadRef>
+        <IsReleaseVersion>$([System.Text.RegularExpressions.Regex]::IsMatch($(GitHeadRef),'^(main|master)$'))</IsReleaseVersion>
+        <PrereleaseIdentifier Condition="'$(IsReleaseVersion)'!='true'">$([System.Text.RegularExpressions.Regex]::Replace($(GitHeadRef),'[^a-zA-Z\d]+','-'))</PrereleaseIdentifier>
+    </PropertyGroup>
+    <ItemGroup>
+        <PrereleaseIdentifier Include="$(PrereleaseIdentifier)" />
+    </ItemGroup>
+
+    <Target Name="OutputBuildInfos" AfterTargets="PostBuildEvent">
+        <Message Text="Version $(AssemblyVersion)" Importance="high" />
+        <Message Text="InformationalVersion $(AssemblyInformationalVersion)" Importance="high" />
+    </Target>
+
+</Project>

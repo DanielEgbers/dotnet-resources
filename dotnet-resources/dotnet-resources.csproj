@@ -2,26 +2,27 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6;net7</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
-    <DebugType>Full</DebugType>
-    <Version>1.2.0</Version>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>dotnet-resources</ToolCommandName>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>.NET Core Global Tool to edit resources of exe</Description>
-    <PackageProjectUrl>https://github.com/DanielEgbers/dotnet-resources</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/DanielEgbers/dotnet-resources</RepositoryUrl>
-    <PackageTags>resource edit exe compile hack</PackageTags>
+    <RollForward>Major</RollForward>
     <RootNamespace>Dotnet.Resources</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    
+    <Product>zvoove pipelines</Product>
+    <Description>.NET Core Global Tool to edit resources of exe</Description>
+    <PackageTags>resource edit exe compile hack</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CliWrap" Version="3.6.0" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageReference Include="CliWrap" />
+    <PackageReference Include="Nerdbank.GitVersioning">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
+  <Target Name="ResourceHacker">
+    <Exec Command="dotnet run &quot;$(MSBuildProjectDirectory)/ResourceHacker.csx&quot;" WorkingDirectory="$([System.IO.Path]::GetTempPath())/MSBuildTemp" EnvironmentVariables="ImportDirectoryBuildProps=false" />
+  </Target>
   <ItemGroup>
     <None Include="ResourceHacker.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -29,7 +30,8 @@
   </ItemGroup>
 
   <Target Name="PostPack" AfterTargets="Pack" Condition="'$(Configuration)' == 'Debug'">
-    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File PostPack.ps1" />
+    <Exec Command="dotnet tool uninstall &quot;$(MSBuildProjectName)&quot; --tool-path &quot;$(ArtifactsPath)/tool&quot;" ContinueOnError="true" />
+    <Exec Command="dotnet tool install &quot;$(MSBuildProjectName)&quot; --tool-path &quot;$(ArtifactsPath)/tool&quot; --source &quot;$(ArtifactsPath)/package/$(Configuration)&quot;" />
   </Target>
 
 </Project>
