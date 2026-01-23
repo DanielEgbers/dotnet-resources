@@ -52,6 +52,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nuget-package
+          path: artifacts/package/release
       - name: Login to NuGet.org
         uses: NuGet/login@v1
         id: nuget-login
