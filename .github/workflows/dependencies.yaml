@@ -1,0 +1,29 @@
+name: Dependencies
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 5'
+
+permissions:
+  contents: read
+
+jobs:
+  dependencies:
+    name: Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Download latest version of ResourceHacker
+        run: dotnet build -t ResourceHacker
+      - name: Check for any changes
+        run: |
+          if git diff --exit-code; then
+            echo "All files are up to date"
+          else
+            echo "Files have changed! You need to update the repository."
+            echo "Changes detected:"
+            git diff --stat
+            exit 1
+          fi
