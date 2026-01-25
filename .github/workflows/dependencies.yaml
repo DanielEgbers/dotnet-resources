@@ -2,6 +2,16 @@ name: Dependencies
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/dependencies.yaml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/dependencies.yaml'
   schedule:
     - cron: '0 2 * * 5'
 
@@ -16,14 +26,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
       - name: Download latest version of ResourceHacker
-        run: dotnet build -t ResourceHacker
+        env:
+          ImportDirectoryBuildProps: false
+        run: |
+          dotnet run ./dotnet-resources/ResourceHacker.csx
+          git restore '*.lock.json'
       - name: Check for any changes
         run: |
-          if git diff --exit-code; then
+          if git diff --exit-code --quiet; then
             echo "All files are up to date"
           else
             echo "Files have changed! You need to update the repository."
-            echo "Changes detected:"
+            echo "Detected changes:"
             git diff --stat
             exit 1
           fi
