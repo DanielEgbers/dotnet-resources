@@ -23,12 +23,6 @@
   
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="/"/>
-  </ItemGroup>
-
-  <Target Name="ResourceHacker">
-    <Exec Command="dotnet run &quot;$(MSBuildProjectDirectory)/ResourceHacker.csx&quot;" WorkingDirectory="$([System.IO.Path]::GetTempPath())/MSBuildTemp" EnvironmentVariables="ImportDirectoryBuildProps=false" />
-  </Target>
-  <ItemGroup>
     <None Include="ResourceHacker.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
