@@ -2,7 +2,7 @@
 
 [![dotnet-resources](https://img.shields.io/nuget/v/dotnet-resources.svg?style=flat-square)](https://www.nuget.org/packages/dotnet-resources)
 
-[.NET Core Global Tools](https://aka.ms/global-tools) to edit resources of exe
+[.NET global tool](https://aka.ms/global-tools) for editing resources of exe files
 
 #### Prerequisites
 - [.NET 8 or .NET 10](https://dotnet.microsoft.com/download)
