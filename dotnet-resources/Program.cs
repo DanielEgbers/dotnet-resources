@@ -56,11 +56,19 @@ async Task<int> ExecVersionInfoCopyAsync(string sourceFile, string targetFile)
 
     try
     {
-        var resourceHacker = CliWrap.Cli.Wrap(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ResourceHacker.exe"));
+        const string ExeFileName = "ResourceHacker.exe";
 
-        var rcFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".rc");
+        var exeFile = Path.Join(AppDomain.CurrentDomain.BaseDirectory, ExeFileName);
+        if (!File.Exists(exeFile))
+        {
+            exeFile = Path.GetFullPath(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "../../any", ExeFileName));
+            if (!File.Exists(exeFile))
+                throw new ApplicationException($"{ExeFileName} not found");
+        }
 
-        await resourceHacker
+        var rcFile = Path.Join(Path.GetTempPath(), Path.GetRandomFileName() + ".rc");
+
+        await CliWrap.Cli.Wrap(exeFile)
             .WithArguments(args => args
                 .Add("-open").Add(sourceFile)
                 .Add("-save").Add(rcFile)
@@ -70,9 +78,9 @@ async Task<int> ExecVersionInfoCopyAsync(string sourceFile, string targetFile)
             .ExecuteAsync();
         try
         {
-            var resFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".res");
+            var resFile = Path.Join(Path.GetTempPath(), Path.GetRandomFileName() + ".res");
 
-            await resourceHacker
+            await CliWrap.Cli.Wrap(exeFile)
                 .WithArguments(args => args
                     .Add("-open").Add(rcFile)
                     .Add("-save").Add(resFile)
@@ -81,7 +89,7 @@ async Task<int> ExecVersionInfoCopyAsync(string sourceFile, string targetFile)
                 .ExecuteAsync();
             try
             {
-                await resourceHacker
+                await CliWrap.Cli.Wrap(exeFile)
                     .WithArguments(args => args
                         .Add("-open").Add(targetFile)
                         .Add("-save").Add(targetFile)
@@ -91,7 +99,7 @@ async Task<int> ExecVersionInfoCopyAsync(string sourceFile, string targetFile)
                     )
                     .ExecuteAsync();
 
-                await resourceHacker
+                await CliWrap.Cli.Wrap(exeFile)
                     .WithArguments(args => args
                         .Add("-open").Add(targetFile)
                         .Add("-save").Add(targetFile)
